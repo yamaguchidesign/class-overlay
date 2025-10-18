@@ -51,7 +51,7 @@ async function toggleExtension(enabled) {
     try {
         await saveSiteSettings(enabled);
         updateUI(enabled);
-        
+
         // content scriptが読み込まれているかチェック
         try {
             const response = await chrome.tabs.sendMessage(currentTab.id, {
