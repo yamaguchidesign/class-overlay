@@ -350,7 +350,7 @@ function getSiteKey(url) {
 // サイトごとの設定を取得
 function getSiteSettings() {
     return new Promise((resolve) => {
-        chrome.storage.local.get(['siteSettings'], function(result) {
+        chrome.storage.local.get(['siteSettings'], function (result) {
             resolve(result.siteSettings || {});
         });
     });
@@ -365,7 +365,7 @@ function setSiteSettings(siteSettings) {
 async function initializeExtension() {
     currentUrl = getCurrentUrl();
     const siteKey = getSiteKey(currentUrl);
-    
+
     // サイトごとの設定を取得
     const siteSettings = await getSiteSettings();
     isOverlayEnabled = siteSettings[siteKey] || false;
@@ -394,7 +394,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
         const siteSettings = await getSiteSettings();
         siteSettings[siteKey] = isOverlayEnabled;
         setSiteSettings(siteSettings);
-        
+
         sendResponse({ success: true });
     }
 
