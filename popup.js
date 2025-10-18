@@ -20,7 +20,7 @@ async function getExtensionStatus() {
         const currentUrl = currentTab.url;
         const siteKey = getSiteKey(currentUrl);
         const fallbackStatus = siteSettings[siteKey] || false;
-        
+
         // content scriptが読み込まれているかチェック
         try {
             const response = await chrome.tabs.sendMessage(currentTab.id, { action: 'getStatus' });

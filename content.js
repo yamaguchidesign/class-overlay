@@ -16,27 +16,27 @@ function createOverlayElement(element) {
 
     // 色分けされたHTMLを作成
     let htmlContent = '';
-
-    // タグ名（青、太字）
+    
+    // タグ名（青背景、白文字、太字）
     if (tagName) {
-        htmlContent += `<span style="color: #2196F3; font-weight: bold;">${tagName}</span>`;
+        htmlContent += `<span style="background: rgba(33, 150, 243, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-weight: bold; margin-right: 2px;">${tagName}</span>`;
     }
-
-    // クラス名（緑、通常）
+    
+    // クラス名（緑背景、白文字、通常）
     if (classes) {
-        htmlContent += `<span style="color: #4CAF50;">${classes}</span>`;
+        htmlContent += `<span style="background: rgba(34, 139, 34, 0.9); color: white; padding: 1px 4px; border-radius: 2px; margin-right: 2px;">${classes}</span>`;
     }
-
-    // ID（紫、イタリック）
+    
+    // ID（紫背景、白文字、イタリック）
     if (id) {
-        htmlContent += `<span style="color: #9C27B0; font-style: italic;">${id}</span>`;
+        htmlContent += `<span style="background: rgba(156, 39, 176, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-style: italic;">${id}</span>`;
     }
-
+    
     overlay.innerHTML = htmlContent;
 
     overlay.style.cssText = `
     position: absolute;
-    background: rgba(0, 0, 0, 0.8);
+    background: transparent;
     color: white;
     padding: 2px 6px;
     border-radius: 3px;
@@ -46,7 +46,7 @@ function createOverlayElement(element) {
     z-index: 999999;
     white-space: nowrap;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    border: 1px solid #333;
+    border: none;
     max-width: 200px;
     word-break: break-all;
     line-height: 1.2;
