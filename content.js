@@ -16,22 +16,22 @@ function createOverlayElement(element) {
 
     // 色分けされたHTMLを作成
     let htmlContent = '';
-    
+
     // タグ名（青背景、白文字、太字）
     if (tagName) {
         htmlContent += `<span style="background: rgba(33, 150, 243, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-weight: bold; margin-right: 2px;">${tagName}</span>`;
     }
-    
+
     // クラス名（緑背景、白文字、通常）
     if (classes) {
         htmlContent += `<span style="background: rgba(34, 139, 34, 0.9); color: white; padding: 1px 4px; border-radius: 2px; margin-right: 2px;">${classes}</span>`;
     }
-    
+
     // ID（紫背景、白文字、イタリック）
     if (id) {
         htmlContent += `<span style="background: rgba(156, 39, 176, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-style: italic;">${id}</span>`;
     }
-    
+
     overlay.innerHTML = htmlContent;
 
     overlay.style.cssText = `

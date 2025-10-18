@@ -47,39 +47,34 @@ function getSiteKey(url) {
 
 // 拡張機能の状態を切り替え
 async function toggleExtension(enabled) {
+    // まずサイトごとの設定に保存
     try {
-        // content scriptにメッセージを送信
-        const response = await chrome.tabs.sendMessage(currentTab.id, {
-            action: 'toggleOverlay',
-            enabled: enabled
-        });
-
-        if (response && response.success) {
-            updateUI(enabled);
-            updateStatusText(enabled);
-        } else {
-            console.error('切り替えに失敗しました');
-            // フォールバック: サイトごとの設定に保存
-            await saveSiteSettings(enabled);
-            updateUI(enabled);
-            updateStatusText(enabled);
-            statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
-            statusText.style.color = '#ff9800';
-        }
-    } catch (error) {
-        console.error('切り替えエラー:', error);
-        // フォールバック: サイトごとの設定に保存
+        await saveSiteSettings(enabled);
+        updateUI(enabled);
+        
+        // content scriptが読み込まれているかチェック
         try {
-            await saveSiteSettings(enabled);
-            updateUI(enabled);
-            updateStatusText(enabled);
+            const response = await chrome.tabs.sendMessage(currentTab.id, {
+                action: 'toggleOverlay',
+                enabled: enabled
+            });
+
+            if (response && response.success) {
+                statusText.textContent = enabled ? 'オーバーレイ表示が有効です' : 'オーバーレイ表示が無効です';
+                statusText.style.color = enabled ? '#4CAF50' : '#666';
+            } else {
+                statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
+                statusText.style.color = '#ff9800';
+            }
+        } catch (error) {
+            console.log('content scriptが読み込まれていません。設定のみ保存しました。');
             statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
             statusText.style.color = '#ff9800';
-        } catch (storageError) {
-            console.error('ストレージ保存エラー:', storageError);
-            statusText.textContent = 'エラー: ページを再読み込みしてください';
-            statusText.style.color = '#d32f2f';
         }
+    } catch (storageError) {
+        console.error('ストレージ保存エラー:', storageError);
+        statusText.textContent = 'エラー: 設定の保存に失敗しました';
+        statusText.style.color = '#d32f2f';
     }
 }
 
@@ -105,13 +100,8 @@ function updateUI(enabled) {
 // ステータステキストの更新
 function updateStatusText(enabled) {
     // この関数は初期化時にのみ使用され、詳細なステータス表示はinitialize()で行う
-    if (enabled) {
-        statusText.textContent = '読み込み中...';
-        statusText.style.color = '#666';
-    } else {
-        statusText.textContent = 'オーバーレイ表示が無効です';
-        statusText.style.color = '#666';
-    }
+    statusText.textContent = '読み込み中...';
+    statusText.style.color = '#666';
 }
 
 // トグルスイッチのクリックイベント
