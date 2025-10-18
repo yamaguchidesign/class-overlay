@@ -19,14 +19,27 @@ async function getExtensionStatus() {
         return response.enabled;
     } catch (error) {
         console.error('ステータス取得エラー:', error);
-        // content scriptが読み込まれていない場合は、ストレージから状態を取得
+        // content scriptが読み込まれていない場合は、サイトごとの設定から状態を取得
         try {
-            const result = await chrome.storage.local.get(['overlayEnabled']);
-            return result.overlayEnabled || false;
+            const result = await chrome.storage.local.get(['siteSettings']);
+            const siteSettings = result.siteSettings || {};
+            const currentUrl = currentTab.url;
+            const siteKey = getSiteKey(currentUrl);
+            return siteSettings[siteKey] || false;
         } catch (storageError) {
             console.error('ストレージ取得エラー:', storageError);
             return false;
         }
+    }
+}
+
+// サイトごとの設定キーを生成
+function getSiteKey(url) {
+    try {
+        const urlObj = new URL(url);
+        return urlObj.origin; // プロトコル + ドメイン + ポート
+    } catch (error) {
+        return url; // URL解析に失敗した場合は元のURLを使用
     }
 }
 
@@ -44,8 +57,8 @@ async function toggleExtension(enabled) {
             updateStatusText(enabled);
         } else {
             console.error('切り替えに失敗しました');
-            // フォールバック: ストレージに保存してページを再読み込み
-            await chrome.storage.local.set({ overlayEnabled: enabled });
+            // フォールバック: サイトごとの設定に保存
+            await saveSiteSettings(enabled);
             updateUI(enabled);
             updateStatusText(enabled);
             statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
@@ -53,9 +66,9 @@ async function toggleExtension(enabled) {
         }
     } catch (error) {
         console.error('切り替えエラー:', error);
-        // フォールバック: ストレージに保存
+        // フォールバック: サイトごとの設定に保存
         try {
-            await chrome.storage.local.set({ overlayEnabled: enabled });
+            await saveSiteSettings(enabled);
             updateUI(enabled);
             updateStatusText(enabled);
             statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
@@ -66,6 +79,16 @@ async function toggleExtension(enabled) {
             statusText.style.color = '#d32f2f';
         }
     }
+}
+
+// サイトごとの設定を保存
+async function saveSiteSettings(enabled) {
+    const result = await chrome.storage.local.get(['siteSettings']);
+    const siteSettings = result.siteSettings || {};
+    const currentUrl = currentTab.url;
+    const siteKey = getSiteKey(currentUrl);
+    siteSettings[siteKey] = enabled;
+    await chrome.storage.local.set({ siteSettings: siteSettings });
 }
 
 // UIの更新

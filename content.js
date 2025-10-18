@@ -2,37 +2,38 @@
 let isOverlayEnabled = false;
 let overlayElements = new Map(); // 要素ごとのオーバーレイを管理
 let overlayPositions = new Map(); // オーバーレイの位置情報を管理
+let currentUrl = null; // 現在のURLを管理
 
 // オーバーレイ要素を作成する関数
 function createOverlayElement(element) {
     const overlay = document.createElement('div');
     overlay.className = 'class-name-overlay';
-    
+
     // 要素の情報を取得
     const tagName = getElementTagName(element);
     const classes = getElementClasses(element);
     const id = getElementId(element);
-    
+
     // 色分けされたHTMLを作成
     let htmlContent = '';
-    
+
     // タグ名（青、太字）
     if (tagName) {
         htmlContent += `<span style="color: #2196F3; font-weight: bold;">${tagName}</span>`;
     }
-    
+
     // クラス名（緑、通常）
     if (classes) {
         htmlContent += `<span style="color: #4CAF50;">${classes}</span>`;
     }
-    
+
     // ID（紫、イタリック）
     if (id) {
         htmlContent += `<span style="color: #9C27B0; font-style: italic;">${id}</span>`;
     }
-    
+
     overlay.innerHTML = htmlContent;
-    
+
     overlay.style.cssText = `
     position: absolute;
     background: rgba(0, 0, 0, 0.8);
@@ -50,58 +51,58 @@ function createOverlayElement(element) {
     word-break: break-all;
     line-height: 1.2;
   `;
-  
-  return overlay;
+
+    return overlay;
 }
 
 // 要素のクラス名を取得する関数
 function getElementClasses(element) {
-  if (!element || !element.classList) {
-    return '';
-  }
-  
-  const classes = Array.from(element.classList);
-  if (classes.length === 0) {
-    return '';
-  }
-  
-  return classes.map(cls => '.' + cls).join(' ');
+    if (!element || !element.classList) {
+        return '';
+    }
+
+    const classes = Array.from(element.classList);
+    if (classes.length === 0) {
+        return '';
+    }
+
+    return classes.map(cls => '.' + cls).join(' ');
 }
 
 // 要素のIDを取得する関数
 function getElementId(element) {
-  if (!element || !element.id) {
-    return '';
-  }
-  
-  return '#' + element.id;
+    if (!element || !element.id) {
+        return '';
+    }
+
+    return '#' + element.id;
 }
 
 // 要素のタグ名を取得する関数
 function getElementTagName(element) {
-  if (!element || !element.tagName) {
-    return '';
-  }
-  
-  return element.tagName.toLowerCase();
+    if (!element || !element.tagName) {
+        return '';
+    }
+
+    return element.tagName.toLowerCase();
 }
 
 // 要素の完全な情報を取得する関数
 function getElementInfo(element) {
-  const tagName = getElementTagName(element);
-  const classes = getElementClasses(element);
-  const id = getElementId(element);
-  
-  // タグ.クラス名.IDの形式で結合
-  let info = tagName;
-  if (classes) {
-    info += classes;
-  }
-  if (id) {
-    info += id;
-  }
-  
-  return info;
+    const tagName = getElementTagName(element);
+    const classes = getElementClasses(element);
+    const id = getElementId(element);
+
+    // タグ.クラス名.IDの形式で結合
+    let info = tagName;
+    if (classes) {
+        info += classes;
+    }
+    if (id) {
+        info += id;
+    }
+
+    return info;
 }
 
 // 要素の位置とサイズを取得する関数
@@ -218,24 +219,24 @@ function showAllOverlays() {
     // ページ内のすべての要素を取得
     const allElements = document.querySelectorAll('*');
 
-  // 要素をサイズ順にソート（大きい要素から処理）
-  const sortedElements = Array.from(allElements)
-    .filter(element => !shouldSkipElement(element))
-    .map(element => ({
-      element,
-      info: getElementInfo(element),
-      position: getElementPosition(element)
-    }))
-    .filter(item => item.info && item.position.width > 0 && item.position.height > 0)
-    .sort((a, b) => (b.position.width * b.position.height) - (a.position.width * a.position.height));
+    // 要素をサイズ順にソート（大きい要素から処理）
+    const sortedElements = Array.from(allElements)
+        .filter(element => !shouldSkipElement(element))
+        .map(element => ({
+            element,
+            info: getElementInfo(element),
+            position: getElementPosition(element)
+        }))
+        .filter(item => item.info && item.position.width > 0 && item.position.height > 0)
+        .sort((a, b) => (b.position.width * b.position.height) - (a.position.width * a.position.height));
 
-  sortedElements.forEach(item => {
-    const { element, info, position } = item;
-    
-    // オーバーレイ要素を作成（一時的にDOMに追加してサイズを取得）
-    const overlay = createOverlayElement(element);
-    overlay.style.visibility = 'hidden'; // 一時的に非表示
-    document.body.appendChild(overlay);
+    sortedElements.forEach(item => {
+        const { element, info, position } = item;
+
+        // オーバーレイ要素を作成（一時的にDOMに追加してサイズを取得）
+        const overlay = createOverlayElement(element);
+        overlay.style.visibility = 'hidden'; // 一時的に非表示
+        document.body.appendChild(overlay);
 
         // オーバーレイのサイズを取得
         const overlayRect = overlay.getBoundingClientRect();
@@ -264,22 +265,22 @@ function showAllOverlays() {
 
 // スキップすべき要素かどうかを判定
 function shouldSkipElement(element) {
-  // オーバーレイ要素自体はスキップ
-  if (element.classList.contains('class-name-overlay')) return true;
-  
-  // 非表示要素はスキップ
-  const style = window.getComputedStyle(element);
-  if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return true;
-  
-  // サイズが極小の要素はスキップ
-  const rect = element.getBoundingClientRect();
-  if (rect.width < 10 || rect.height < 10) return true;
-  
-  // タグ名、クラス名、IDがすべてない要素はスキップ
-  const info = getElementInfo(element);
-  if (!info || info.trim() === '') return true;
-  
-  return false;
+    // オーバーレイ要素自体はスキップ
+    if (element.classList.contains('class-name-overlay')) return true;
+
+    // 非表示要素はスキップ
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return true;
+
+    // サイズが極小の要素はスキップ
+    const rect = element.getBoundingClientRect();
+    if (rect.width < 10 || rect.height < 10) return true;
+
+    // タグ名、クラス名、IDがすべてない要素はスキップ
+    const info = getElementInfo(element);
+    if (!info || info.trim() === '') return true;
+
+    return false;
 }
 
 // すべてのオーバーレイをクリアする関数
@@ -331,23 +332,56 @@ function removeEventListeners() {
     clearAllOverlays();
 }
 
-// 拡張機能の状態を初期化
-function initializeExtension() {
-    // ストレージから設定を読み込み
-    chrome.storage.local.get(['overlayEnabled'], function (result) {
-        isOverlayEnabled = result.overlayEnabled || false;
+// 現在のURLを取得
+function getCurrentUrl() {
+    return window.location.href;
+}
 
-        if (isOverlayEnabled) {
-            addEventListeners();
-            showAllOverlays();
-        }
+// サイトごとの設定キーを生成
+function getSiteKey(url) {
+    try {
+        const urlObj = new URL(url);
+        return urlObj.origin; // プロトコル + ドメイン + ポート
+    } catch (error) {
+        return url; // URL解析に失敗した場合は元のURLを使用
+    }
+}
+
+// サイトごとの設定を取得
+function getSiteSettings() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['siteSettings'], function(result) {
+            resolve(result.siteSettings || {});
+        });
     });
 }
 
+// サイトごとの設定を保存
+function setSiteSettings(siteSettings) {
+    chrome.storage.local.set({ siteSettings: siteSettings });
+}
+
+// 拡張機能の状態を初期化
+async function initializeExtension() {
+    currentUrl = getCurrentUrl();
+    const siteKey = getSiteKey(currentUrl);
+    
+    // サイトごとの設定を取得
+    const siteSettings = await getSiteSettings();
+    isOverlayEnabled = siteSettings[siteKey] || false;
+
+    if (isOverlayEnabled) {
+        addEventListeners();
+        showAllOverlays();
+    }
+}
+
 // メッセージリスナー（popupからの制御）
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
     if (request.action === 'toggleOverlay') {
         isOverlayEnabled = request.enabled;
+        currentUrl = getCurrentUrl();
+        const siteKey = getSiteKey(currentUrl);
 
         if (isOverlayEnabled) {
             addEventListeners();
@@ -356,8 +390,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             removeEventListeners();
         }
 
-        // 設定を保存
-        chrome.storage.local.set({ overlayEnabled: isOverlayEnabled });
+        // サイトごとの設定を保存
+        const siteSettings = await getSiteSettings();
+        siteSettings[siteKey] = isOverlayEnabled;
+        setSiteSettings(siteSettings);
+        
         sendResponse({ success: true });
     }
 
