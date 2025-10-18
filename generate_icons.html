@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>アイコン生成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+
+        .icon-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .icon-container h3 {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .icon {
+            border: 1px solid #ccc;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chrome拡張アイコン生成</h1>
+    <p>以下のアイコンを右クリックして「画像を保存」でPNGファイルとして保存してください。</p>
+
+    <div class="icon-container">
+        <h3>16x16</h3>
+        <img src="icon.svg" width="16" height="16" class="icon" alt="16x16 icon">
+    </div>
+
+    <div class="icon-container">
+        <h3>48x48</h3>
+        <img src="icon.svg" width="48" height="48" class="icon" alt="48x48 icon">
+    </div>
+
+    <div class="icon-container">
+        <h3>128x128</h3>
+        <img src="icon.svg" width="128" height="128" class="icon" alt="128x128 icon">
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: white; border-radius: 8px;">
+        <h3>保存手順:</h3>
+        <ol>
+            <li>各アイコンを右クリック</li>
+            <li>「画像を保存」を選択</li>
+            <li>ファイル名を以下のように設定:
+                <ul>
+                    <li>16x16 → icon16.png</li>
+                    <li>48x48 → icon48.png</li>
+                    <li>128x128 → icon128.png</li>
+                </ul>
+            </li>
+            <li>Chrome拡張のフォルダに保存</li>
+        </ol>
+    </div>
+</body>
+
+</html>
