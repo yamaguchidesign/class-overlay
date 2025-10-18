@@ -1,33 +1,33 @@
 /* オーバーレイのスタイル（content.jsでインラインスタイルを使用しているため、このファイルは予備として保持） */
 .class-name-overlay {
-  position: absolute;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 10px;
-  pointer-events: none;
-  z-index: 999999;
-  white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid #333;
-  max-width: 200px;
-  word-break: break-all;
-  line-height: 1.2;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 10px;
+    pointer-events: none;
+    z-index: 999999;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+    max-width: 200px;
+    word-break: break-all;
+    line-height: 1.2;
 }
 
 /* 色分けスタイル */
 .class-name-overlay .tag-name {
-  color: #2196F3;
-  font-weight: bold;
+    color: #2196F3;
+    font-weight: bold;
 }
 
 .class-name-overlay .class-name {
-  color: #4CAF50;
+    color: #4CAF50;
 }
 
 .class-name-overlay .id-name {
-  color: #9C27B0;
-  font-style: italic;
+    color: #9C27B0;
+    font-style: italic;
 }
