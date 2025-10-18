@@ -3,37 +3,39 @@ let isOverlayEnabled = false;
 let overlayElements = new Map(); // 要素ごとのオーバーレイを管理
 let overlayPositions = new Map(); // オーバーレイの位置情報を管理
 let currentUrl = null; // 現在のURLを管理
+let mouseOverlayElement = null; // マウスオーバー用のオーバーレイ要素
+let isMouseOverlayVisible = false; // マウスオーバーオーバーレイの表示状態
 
 // オーバーレイ要素を作成する関数
 function createOverlayElement(element) {
     const overlay = document.createElement('div');
     overlay.className = 'class-name-overlay';
-
+    
     // 要素の情報を取得
     const tagName = getElementTagName(element);
     const classes = getElementClasses(element);
     const id = getElementId(element);
-
+    
     // 色分けされたHTMLを作成
     let htmlContent = '';
-
+    
     // タグ名（青背景、白文字、太字）
     if (tagName) {
         htmlContent += `<span style="background: rgba(33, 150, 243, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-weight: bold; margin-right: 2px;">${tagName}</span>`;
     }
-
+    
     // クラス名（緑背景、白文字、通常）
     if (classes) {
         htmlContent += `<span style="background: rgba(34, 139, 34, 0.9); color: white; padding: 1px 4px; border-radius: 2px; margin-right: 2px;">${classes}</span>`;
     }
-
+    
     // ID（紫背景、白文字、イタリック）
     if (id) {
         htmlContent += `<span style="background: rgba(156, 39, 176, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-style: italic;">${id}</span>`;
     }
-
+    
     overlay.innerHTML = htmlContent;
-
+    
     overlay.style.cssText = `
     position: absolute;
     background: transparent;
@@ -51,8 +53,60 @@ function createOverlayElement(element) {
     word-break: break-all;
     line-height: 1.2;
   `;
+  
+  return overlay;
+}
 
-    return overlay;
+// マウスオーバー用のオーバーレイ要素を作成する関数
+function createMouseOverlayElement(element) {
+    const overlay = document.createElement('div');
+    overlay.className = 'mouse-overlay';
+    
+    // 要素の情報を取得
+    const tagName = getElementTagName(element);
+    const classes = getElementClasses(element);
+    const id = getElementId(element);
+    
+    // 色分けされたHTMLを作成（既存と同じスタイリング）
+    let htmlContent = '';
+    
+    // タグ名（青背景、白文字、太字）
+    if (tagName) {
+        htmlContent += `<span style="background: rgba(33, 150, 243, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-weight: bold; margin-right: 2px;">${tagName}</span>`;
+    }
+    
+    // クラス名（緑背景、白文字、通常）
+    if (classes) {
+        htmlContent += `<span style="background: rgba(34, 139, 34, 0.9); color: white; padding: 1px 4px; border-radius: 2px; margin-right: 2px;">${classes}</span>`;
+    }
+    
+    // ID（紫背景、白文字、イタリック）
+    if (id) {
+        htmlContent += `<span style="background: rgba(156, 39, 176, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-style: italic;">${id}</span>`;
+    }
+    
+    overlay.innerHTML = htmlContent;
+    
+    overlay.style.cssText = `
+    position: fixed;
+    background: transparent;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 10px;
+    pointer-events: none;
+    z-index: 1000000;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    border: none;
+    max-width: 200px;
+    word-break: break-all;
+    line-height: 1.2;
+    display: none;
+  `;
+  
+  return overlay;
 }
 
 // 要素のクラス名を取得する関数
@@ -366,8 +420,98 @@ function clearAllOverlays() {
     overlayPositions.clear();
 }
 
+// マウスオーバー時のオーバーレイ表示
+function showMouseOverlay(element, event) {
+  if (!isOverlayEnabled || !mouseOverlayElement) return;
+  
+  // 要素の情報を更新
+  const tagName = getElementTagName(element);
+  const classes = getElementClasses(element);
+  const id = getElementId(element);
+  
+  // 色分けされたHTMLを作成
+  let htmlContent = '';
+  
+  if (tagName) {
+    htmlContent += `<span style="background: rgba(33, 150, 243, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-weight: bold; margin-right: 2px;">${tagName}</span>`;
+  }
+  
+  if (classes) {
+    htmlContent += `<span style="background: rgba(34, 139, 34, 0.9); color: white; padding: 1px 4px; border-radius: 2px; margin-right: 2px;">${classes}</span>`;
+  }
+  
+  if (id) {
+    htmlContent += `<span style="background: rgba(156, 39, 176, 0.9); color: white; padding: 1px 4px; border-radius: 2px; font-style: italic;">${id}</span>`;
+  }
+  
+  mouseOverlayElement.innerHTML = htmlContent;
+  
+  // マウス位置にオーバーレイを配置
+  const x = event.clientX + 10;
+  const y = event.clientY - 30;
+  
+  mouseOverlayElement.style.left = x + 'px';
+  mouseOverlayElement.style.top = y + 'px';
+  mouseOverlayElement.style.display = 'block';
+  isMouseOverlayVisible = true;
+}
+
+// マウスオーバー時のオーバーレイ非表示
+function hideMouseOverlay() {
+  if (mouseOverlayElement) {
+    mouseOverlayElement.style.display = 'none';
+    isMouseOverlayVisible = false;
+  }
+}
+
+// マウス移動時のオーバーレイ位置更新
+function updateMouseOverlayPosition(event) {
+  if (!isMouseOverlayVisible || !mouseOverlayElement) return;
+  
+  const x = event.clientX + 10;
+  const y = event.clientY - 30;
+  
+  mouseOverlayElement.style.left = x + 'px';
+  mouseOverlayElement.style.top = y + 'px';
+}
+
 // イベントリスナーを追加する関数
 function addEventListeners() {
+    // マウスオーバー用のオーバーレイ要素を作成
+    if (!mouseOverlayElement) {
+        mouseOverlayElement = createMouseOverlayElement(document.body);
+        document.body.appendChild(mouseOverlayElement);
+    }
+    
+    // マウスイベントリスナー
+    document.addEventListener('mouseover', function(event) {
+        if (!isOverlayEnabled) return;
+        
+        // オーバーレイ要素自体はスキップ
+        if (event.target.classList.contains('class-name-overlay') || 
+            event.target.classList.contains('mouse-overlay')) return;
+        
+        // 要素の情報を取得
+        const tagName = getElementTagName(event.target);
+        const classes = getElementClasses(event.target);
+        const id = getElementId(event.target);
+        
+        // タグ名、クラス名、IDがすべてない要素はスキップ
+        if (!tagName && !classes && !id) return;
+        
+        showMouseOverlay(event.target, event);
+    });
+    
+    document.addEventListener('mouseout', function(event) {
+        if (!isOverlayEnabled) return;
+        hideMouseOverlay();
+    });
+    
+    document.addEventListener('mousemove', function(event) {
+        if (!isOverlayEnabled) return;
+        updateMouseOverlayPosition(event);
+    });
+    
     // スクロール時にオーバーレイを更新
     window.addEventListener('scroll', function () {
         if (isOverlayEnabled) {
@@ -402,6 +546,9 @@ function addEventListeners() {
 function removeEventListeners() {
     // 既存のオーバーレイをクリア
     clearAllOverlays();
+    
+    // マウスオーバーオーバーレイを非表示
+    hideMouseOverlay();
 }
 
 // 現在のURLを取得
