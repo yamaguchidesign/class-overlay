@@ -8,7 +8,7 @@ function createOverlayElement(element) {
     overlay.className = 'class-name-overlay';
     overlay.style.cssText = `
     position: absolute;
-    background: rgba(255, 0, 0, 0.8);
+    background: rgba(34, 139, 34, 0.9);
     color: white;
     padding: 2px 6px;
     border-radius: 3px;
@@ -19,7 +19,7 @@ function createOverlayElement(element) {
     z-index: 999999;
     white-space: nowrap;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    border: 1px solid #ff0000;
+    border: 1px solid #228B22;
     max-width: 200px;
     word-break: break-all;
     line-height: 1.2;
