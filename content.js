@@ -1,6 +1,7 @@
 // オーバーレイ表示の状態管理
 let isOverlayEnabled = false;
 let overlayElements = new Map(); // 要素ごとのオーバーレイを管理
+let overlayPositions = new Map(); // オーバーレイの位置情報を管理
 
 // オーバーレイ要素を作成する関数
 function createOverlayElement(element) {
@@ -44,50 +45,161 @@ function getElementClasses(element) {
 
 // 要素の位置とサイズを取得する関数
 function getElementPosition(element) {
-    const rect = element.getBoundingClientRect();
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  const rect = element.getBoundingClientRect();
+  const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+  const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  
+  return {
+    left: rect.left + scrollX,
+    top: rect.top + scrollY,
+    width: rect.width,
+    height: rect.height
+  };
+}
 
-    return {
-        left: rect.left + scrollX,
-        top: rect.top + scrollY,
-        width: rect.width,
-        height: rect.height
-    };
+// オーバーレイの可能な位置を定義
+const OVERLAY_POSITIONS = {
+  TOP_LEFT: 'top-left',
+  TOP_RIGHT: 'top-right',
+  BOTTOM_LEFT: 'bottom-left',
+  BOTTOM_RIGHT: 'bottom-right',
+  CENTER: 'center'
+};
+
+// 位置に応じたオーバーレイの座標を計算
+function calculateOverlayPosition(elementRect, position, overlayWidth, overlayHeight) {
+  const margin = 2; // 要素からのマージン
+  
+  switch (position) {
+    case OVERLAY_POSITIONS.TOP_LEFT:
+      return {
+        left: elementRect.left + margin,
+        top: elementRect.top + margin
+      };
+    case OVERLAY_POSITIONS.TOP_RIGHT:
+      return {
+        left: elementRect.left + elementRect.width - overlayWidth - margin,
+        top: elementRect.top + margin
+      };
+    case OVERLAY_POSITIONS.BOTTOM_LEFT:
+      return {
+        left: elementRect.left + margin,
+        top: elementRect.top + elementRect.height - overlayHeight - margin
+      };
+    case OVERLAY_POSITIONS.BOTTOM_RIGHT:
+      return {
+        left: elementRect.left + elementRect.width - overlayWidth - margin,
+        top: elementRect.top + elementRect.height - overlayHeight - margin
+      };
+    case OVERLAY_POSITIONS.CENTER:
+      return {
+        left: elementRect.left + (elementRect.width - overlayWidth) / 2,
+        top: elementRect.top + (elementRect.height - overlayHeight) / 2
+      };
+    default:
+      return {
+        left: elementRect.left + margin,
+        top: elementRect.top + margin
+      };
+  }
+}
+
+// 2つの矩形が重なっているかチェック
+function isOverlapping(rect1, rect2) {
+  return !(rect1.left + rect1.width < rect2.left || 
+           rect2.left + rect2.width < rect1.left || 
+           rect1.top + rect1.height < rect2.top || 
+           rect2.top + rect2.height < rect1.top);
+}
+
+// オーバーレイの重なりを検出して最適な位置を選択
+function findBestPosition(elementRect, overlayWidth, overlayHeight) {
+  const positions = Object.values(OVERLAY_POSITIONS);
+  
+  for (const position of positions) {
+    const overlayRect = calculateOverlayPosition(elementRect, position, overlayWidth, overlayHeight);
+    
+    // 画面外に出ないかチェック
+    if (overlayRect.left < 0 || overlayRect.top < 0 || 
+        overlayRect.left + overlayWidth > window.innerWidth || 
+        overlayRect.top + overlayHeight > window.innerHeight) {
+      continue;
+    }
+    
+    // 既存のオーバーレイとの重なりをチェック
+    let hasOverlap = false;
+    for (const [_, existingRect] of overlayPositions) {
+      if (isOverlapping(overlayRect, existingRect)) {
+        hasOverlap = true;
+        break;
+      }
+    }
+    
+    if (!hasOverlap) {
+      return { position, rect: overlayRect };
+    }
+  }
+  
+  // 重ならない位置が見つからない場合は左上を返す
+  return {
+    position: OVERLAY_POSITIONS.TOP_LEFT,
+    rect: calculateOverlayPosition(elementRect, OVERLAY_POSITIONS.TOP_LEFT, overlayWidth, overlayHeight)
+  };
 }
 
 // すべての要素にオーバーレイを表示する関数
 function showAllOverlays() {
-    if (!isOverlayEnabled) return;
-
-    // 既存のオーバーレイをクリア
-    clearAllOverlays();
-
-    // ページ内のすべての要素を取得
-    const allElements = document.querySelectorAll('*');
-
-    allElements.forEach(element => {
-        // 特定の要素をスキップ
-        if (shouldSkipElement(element)) return;
-
-        const classes = getElementClasses(element);
-        if (classes === 'クラスなし') return; // クラスがない要素はスキップ
-
-        const position = getElementPosition(element);
-
-        // 要素が画面に表示されているかチェック
-        if (position.width > 0 && position.height > 0) {
-            const overlay = createOverlayElement(element);
-            overlay.textContent = classes;
-
-            // オーバーレイを要素の左上に配置
-            overlay.style.left = position.left + 'px';
-            overlay.style.top = position.top + 'px';
-
-            document.body.appendChild(overlay);
-            overlayElements.set(element, overlay);
-        }
+  if (!isOverlayEnabled) return;
+  
+  // 既存のオーバーレイをクリア
+  clearAllOverlays();
+  
+  // ページ内のすべての要素を取得
+  const allElements = document.querySelectorAll('*');
+  
+  // 要素をサイズ順にソート（大きい要素から処理）
+  const sortedElements = Array.from(allElements)
+    .filter(element => !shouldSkipElement(element))
+    .map(element => ({
+      element,
+      classes: getElementClasses(element),
+      position: getElementPosition(element)
+    }))
+    .filter(item => item.classes !== 'クラスなし' && item.position.width > 0 && item.position.height > 0)
+    .sort((a, b) => (b.position.width * b.position.height) - (a.position.width * a.position.height));
+  
+  sortedElements.forEach(item => {
+    const { element, classes, position } = item;
+    
+    // オーバーレイ要素を作成（一時的にDOMに追加してサイズを取得）
+    const overlay = createOverlayElement(element);
+    overlay.textContent = classes;
+    overlay.style.visibility = 'hidden'; // 一時的に非表示
+    document.body.appendChild(overlay);
+    
+    // オーバーレイのサイズを取得
+    const overlayRect = overlay.getBoundingClientRect();
+    const overlayWidth = overlayRect.width;
+    const overlayHeight = overlayRect.height;
+    
+    // 最適な位置を検索
+    const bestPosition = findBestPosition(position, overlayWidth, overlayHeight);
+    
+    // オーバーレイを最適な位置に配置
+    overlay.style.left = bestPosition.rect.left + 'px';
+    overlay.style.top = bestPosition.rect.top + 'px';
+    overlay.style.visibility = 'visible'; // 表示
+    
+    // 位置情報を保存
+    overlayPositions.set(element, {
+      left: bestPosition.rect.left,
+      top: bestPosition.rect.top,
+      width: overlayWidth,
+      height: overlayHeight
     });
+    
+    overlayElements.set(element, overlay);
+  });
 }
 
 // スキップすべき要素かどうかを判定
@@ -108,12 +220,13 @@ function shouldSkipElement(element) {
 
 // すべてのオーバーレイをクリアする関数
 function clearAllOverlays() {
-    overlayElements.forEach(overlay => {
-        if (overlay && overlay.parentNode) {
-            overlay.parentNode.removeChild(overlay);
-        }
-    });
-    overlayElements.clear();
+  overlayElements.forEach(overlay => {
+    if (overlay && overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+  });
+  overlayElements.clear();
+  overlayPositions.clear();
 }
 
 // イベントリスナーを追加する関数
