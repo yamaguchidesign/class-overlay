@@ -14,32 +14,57 @@ async function getCurrentTab() {
 // 拡張機能の状態を取得
 async function getExtensionStatus() {
     try {
+        // content scriptが読み込まれているかチェック
         const response = await chrome.tabs.sendMessage(currentTab.id, { action: 'getStatus' });
         return response.enabled;
     } catch (error) {
         console.error('ステータス取得エラー:', error);
-        return false;
+        // content scriptが読み込まれていない場合は、ストレージから状態を取得
+        try {
+            const result = await chrome.storage.local.get(['overlayEnabled']);
+            return result.overlayEnabled || false;
+        } catch (storageError) {
+            console.error('ストレージ取得エラー:', storageError);
+            return false;
+        }
     }
 }
 
 // 拡張機能の状態を切り替え
 async function toggleExtension(enabled) {
     try {
+        // content scriptにメッセージを送信
         const response = await chrome.tabs.sendMessage(currentTab.id, {
             action: 'toggleOverlay',
             enabled: enabled
         });
 
-        if (response.success) {
+        if (response && response.success) {
             updateUI(enabled);
             updateStatusText(enabled);
         } else {
             console.error('切り替えに失敗しました');
+            // フォールバック: ストレージに保存してページを再読み込み
+            await chrome.storage.local.set({ overlayEnabled: enabled });
+            updateUI(enabled);
+            updateStatusText(enabled);
+            statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
+            statusText.style.color = '#ff9800';
         }
     } catch (error) {
         console.error('切り替えエラー:', error);
-        statusText.textContent = 'エラー: ページを再読み込みしてください';
-        statusText.style.color = '#d32f2f';
+        // フォールバック: ストレージに保存
+        try {
+            await chrome.storage.local.set({ overlayEnabled: enabled });
+            updateUI(enabled);
+            updateStatusText(enabled);
+            statusText.textContent = '設定を保存しました。ページを再読み込みしてください。';
+            statusText.style.color = '#ff9800';
+        } catch (storageError) {
+            console.error('ストレージ保存エラー:', storageError);
+            statusText.textContent = 'エラー: ページを再読み込みしてください';
+            statusText.style.color = '#d32f2f';
+        }
     }
 }
 
@@ -89,6 +114,16 @@ async function initialize() {
         // UIを更新
         updateUI(isEnabled);
         updateStatusText(isEnabled);
+
+        // content scriptが読み込まれていない場合の警告
+        if (isEnabled) {
+            try {
+                await chrome.tabs.sendMessage(currentTab.id, { action: 'ping' });
+            } catch (error) {
+                statusText.textContent = '設定は有効ですが、ページを再読み込みしてください';
+                statusText.style.color = '#ff9800';
+            }
+        }
 
     } catch (error) {
         console.error('初期化エラー:', error);
