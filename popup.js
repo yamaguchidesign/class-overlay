@@ -13,23 +13,25 @@ async function getCurrentTab() {
 
 // 拡張機能の状態を取得
 async function getExtensionStatus() {
+    // まずサイトごとの設定から状態を取得（フォールバック）
     try {
+        const result = await chrome.storage.local.get(['siteSettings']);
+        const siteSettings = result.siteSettings || {};
+        const currentUrl = currentTab.url;
+        const siteKey = getSiteKey(currentUrl);
+        const fallbackStatus = siteSettings[siteKey] || false;
+        
         // content scriptが読み込まれているかチェック
-        const response = await chrome.tabs.sendMessage(currentTab.id, { action: 'getStatus' });
-        return response.enabled;
-    } catch (error) {
-        console.error('ステータス取得エラー:', error);
-        // content scriptが読み込まれていない場合は、サイトごとの設定から状態を取得
         try {
-            const result = await chrome.storage.local.get(['siteSettings']);
-            const siteSettings = result.siteSettings || {};
-            const currentUrl = currentTab.url;
-            const siteKey = getSiteKey(currentUrl);
-            return siteSettings[siteKey] || false;
-        } catch (storageError) {
-            console.error('ストレージ取得エラー:', storageError);
-            return false;
+            const response = await chrome.tabs.sendMessage(currentTab.id, { action: 'getStatus' });
+            return response.enabled;
+        } catch (error) {
+            console.log('content scriptが読み込まれていません。フォールバック設定を使用します。');
+            return fallbackStatus;
         }
+    } catch (storageError) {
+        console.error('ストレージ取得エラー:', storageError);
+        return false;
     }
 }
 
@@ -102,9 +104,10 @@ function updateUI(enabled) {
 
 // ステータステキストの更新
 function updateStatusText(enabled) {
+    // この関数は初期化時にのみ使用され、詳細なステータス表示はinitialize()で行う
     if (enabled) {
-        statusText.textContent = 'オーバーレイ表示が有効です';
-        statusText.style.color = '#4CAF50';
+        statusText.textContent = '読み込み中...';
+        statusText.style.color = '#666';
     } else {
         statusText.textContent = 'オーバーレイ表示が無効です';
         statusText.style.color = '#666';
@@ -138,13 +141,25 @@ async function initialize() {
         updateUI(isEnabled);
         updateStatusText(isEnabled);
 
-        // content scriptが読み込まれていない場合の警告
-        if (isEnabled) {
-            try {
-                await chrome.tabs.sendMessage(currentTab.id, { action: 'ping' });
-            } catch (error) {
+        // content scriptの状態をチェック
+        try {
+            await chrome.tabs.sendMessage(currentTab.id, { action: 'ping' });
+            // content scriptが正常に動作している場合
+            if (isEnabled) {
+                statusText.textContent = 'オーバーレイ表示が有効です';
+                statusText.style.color = '#4CAF50';
+            } else {
+                statusText.textContent = 'オーバーレイ表示が無効です';
+                statusText.style.color = '#666';
+            }
+        } catch (error) {
+            // content scriptが読み込まれていない場合
+            if (isEnabled) {
                 statusText.textContent = '設定は有効ですが、ページを再読み込みしてください';
                 statusText.style.color = '#ff9800';
+            } else {
+                statusText.textContent = 'オーバーレイ表示が無効です';
+                statusText.style.color = '#666';
             }
         }
 
