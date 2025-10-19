@@ -1,6 +1,8 @@
 // DOM要素の取得
 const toggleSwitch = document.getElementById('toggleSwitch');
 const statusText = document.getElementById('statusText');
+const modeAllAndMouse = document.getElementById('modeAllAndMouse');
+const modeMouseOnly = document.getElementById('modeMouseOnly');
 
 // 現在のタブを取得
 let currentTab = null;
@@ -15,23 +17,33 @@ async function getCurrentTab() {
 async function getExtensionStatus() {
     // まずサイトごとの設定から状態を取得（フォールバック）
     try {
-        const result = await chrome.storage.local.get(['siteSettings']);
+        const result = await chrome.storage.local.get(['siteSettings', 'displayMode']);
         const siteSettings = result.siteSettings || {};
         const currentUrl = currentTab.url;
         const siteKey = getSiteKey(currentUrl);
         const fallbackStatus = siteSettings[siteKey] || false;
+        const fallbackMode = result.displayMode || 'all_and_mouse';
 
         // content scriptが読み込まれているかチェック
         try {
             const response = await chrome.tabs.sendMessage(currentTab.id, { action: 'getStatus' });
-            return response.enabled;
+            return {
+                enabled: response.enabled,
+                mode: response.mode || fallbackMode
+            };
         } catch (error) {
             console.log('content scriptが読み込まれていません。フォールバック設定を使用します。');
-            return fallbackStatus;
+            return {
+                enabled: fallbackStatus,
+                mode: fallbackMode
+            };
         }
     } catch (storageError) {
         console.error('ストレージ取得エラー:', storageError);
-        return false;
+        return {
+            enabled: false,
+            mode: 'all_and_mouse'
+        };
     }
 }
 
@@ -97,11 +109,56 @@ function updateUI(enabled) {
     }
 }
 
+// モードUIの更新
+function updateModeUI(mode) {
+    if (mode === 'all_and_mouse') {
+        modeAllAndMouse.checked = true;
+    } else if (mode === 'mouse_only') {
+        modeMouseOnly.checked = true;
+    }
+}
+
 // ステータステキストの更新
 function updateStatusText(enabled) {
     // この関数は初期化時にのみ使用され、詳細なステータス表示はinitialize()で行う
     statusText.textContent = '読み込み中...';
     statusText.style.color = '#666';
+}
+
+// モード変更のイベントリスナー
+modeAllAndMouse.addEventListener('change', async function () {
+    if (this.checked) {
+        await changeMode('all_and_mouse');
+    }
+});
+
+modeMouseOnly.addEventListener('change', async function () {
+    if (this.checked) {
+        await changeMode('mouse_only');
+    }
+});
+
+// モード変更
+async function changeMode(mode) {
+    try {
+        const response = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'changeMode',
+            mode: mode
+        });
+
+        if (response && response.success) {
+            const modeText = mode === 'all_and_mouse' ? '全表示 + マウスオーバー' : 'マウスオーバーのみ';
+            statusText.textContent = `モードを変更しました (${modeText})`;
+            statusText.style.color = '#4CAF50';
+        } else {
+            statusText.textContent = 'モード変更に失敗しました';
+            statusText.style.color = '#d32f2f';
+        }
+    } catch (error) {
+        console.error('モード変更エラー:', error);
+        statusText.textContent = 'エラー: ページを再読み込みしてください';
+        statusText.style.color = '#d32f2f';
+    }
 }
 
 // トグルスイッチのクリックイベント
@@ -125,18 +182,20 @@ async function initialize() {
         }
 
         // 拡張機能の状態を取得
-        const isEnabled = await getExtensionStatus();
+        const status = await getExtensionStatus();
 
         // UIを更新
-        updateUI(isEnabled);
-        updateStatusText(isEnabled);
+        updateUI(status.enabled);
+        updateModeUI(status.mode);
+        updateStatusText(status.enabled);
 
         // content scriptの状態をチェック
         try {
             await chrome.tabs.sendMessage(currentTab.id, { action: 'ping' });
             // content scriptが正常に動作している場合
-            if (isEnabled) {
-                statusText.textContent = 'オーバーレイ表示が有効です';
+            if (status.enabled) {
+                const modeText = status.mode === 'all_and_mouse' ? '全表示 + マウスオーバー' : 'マウスオーバーのみ';
+                statusText.textContent = `オーバーレイ表示が有効です (${modeText})`;
                 statusText.style.color = '#4CAF50';
             } else {
                 statusText.textContent = 'オーバーレイ表示が無効です';
@@ -144,7 +203,7 @@ async function initialize() {
             }
         } catch (error) {
             // content scriptが読み込まれていない場合
-            if (isEnabled) {
+            if (status.enabled) {
                 statusText.textContent = '設定は有効ですが、ページを再読み込みしてください';
                 statusText.style.color = '#ff9800';
             } else {

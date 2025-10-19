@@ -6,6 +6,14 @@ let currentUrl = null; // 現在のURLを管理
 let mouseOverlayElement = null; // マウスオーバー用のオーバーレイ要素
 let isMouseOverlayVisible = false; // マウスオーバーオーバーレイの表示状態
 
+// 表示モードの定義
+const DISPLAY_MODES = {
+    ALL_AND_MOUSE: 'all_and_mouse', // 全表示 + マウスオーバー
+    MOUSE_ONLY: 'mouse_only'        // マウスオーバーのみ
+};
+
+let currentDisplayMode = DISPLAY_MODES.ALL_AND_MOUSE; // デフォルトモード
+
 // オーバーレイ要素を作成する関数
 function createOverlayElement(element) {
     const overlay = document.createElement('div');
@@ -338,7 +346,14 @@ function moveElementUp(element, offset) {
 // すべての要素にオーバーレイを表示する関数
 function showAllOverlays() {
     if (!isOverlayEnabled) return;
-
+    
+    // マウスオーバーのみモードの場合は全要素表示をスキップ
+    if (currentDisplayMode === DISPLAY_MODES.MOUSE_ONLY) {
+        // 全要素表示のオーバーレイをクリア
+        clearAllOverlays();
+        return;
+    }
+    
     // 既存のオーバーレイをクリア
     clearAllOverlays();
 
@@ -589,10 +604,28 @@ async function initializeExtension() {
     const siteSettings = await getSiteSettings();
     isOverlayEnabled = siteSettings[siteKey] || false;
 
+    // 表示モードの設定を取得
+    const modeSettings = await getModeSettings();
+    currentDisplayMode = modeSettings.displayMode || DISPLAY_MODES.ALL_AND_MOUSE;
+
     if (isOverlayEnabled) {
         addEventListeners();
         showAllOverlays();
     }
+}
+
+// 表示モードの設定を取得
+function getModeSettings() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['displayMode'], function (result) {
+            resolve(result);
+        });
+    });
+}
+
+// 表示モードの設定を保存
+function setModeSettings(displayMode) {
+    chrome.storage.local.set({ displayMode: displayMode });
 }
 
 // メッセージリスナー（popupからの制御）
@@ -617,8 +650,26 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
         sendResponse({ success: true });
     }
 
+    if (request.action === 'changeMode') {
+        currentDisplayMode = request.mode;
+        setModeSettings(currentDisplayMode);
+        
+        // 現在有効な場合は表示を更新
+        if (isOverlayEnabled) {
+            // 全要素表示のオーバーレイをクリア
+            clearAllOverlays();
+            // 新しいモードに応じて表示を更新
+            showAllOverlays();
+        }
+        
+        sendResponse({ success: true });
+    }
+
     if (request.action === 'getStatus') {
-        sendResponse({ enabled: isOverlayEnabled });
+        sendResponse({
+            enabled: isOverlayEnabled,
+            mode: currentDisplayMode
+        });
     }
 
     if (request.action === 'ping') {
