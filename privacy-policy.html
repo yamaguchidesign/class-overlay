@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー - クラス名オーバーレイ表示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #222;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #444;
+            border-left: 4px solid #4CAF50;
+            padding-left: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            line-height: 1.8;
+        }
+        
+        .last-updated {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .contact {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>プライバシーポリシー</h1>
+        <p class="last-updated">最終更新日: 2024年10月18日</p>
+        
+        <h2>1. はじめに</h2>
+        <p>
+            「クラス名オーバーレイ表示」（以下「本拡張機能」）は、ユーザーのプライバシーを尊重し、個人情報の保護に努めています。
+            本プライバシーポリシーは、本拡張機能がどのような情報を収集し、どのように使用するかについて説明します。
+        </p>
+        
+        <h2>2. 収集する情報</h2>
+        <p>本拡張機能は、以下の情報を収集・保存します：</p>
+        <ul>
+            <li><strong>サイトごとの設定情報</strong>：各ウェブサイトでオーバーレイ表示を有効/無効にした設定</li>
+            <li><strong>表示モード設定</strong>：選択した表示モード（全表示 + マウスオーバー / マウスオーバーのみ）</li>
+        </ul>
+        
+        <div class="highlight">
+            <strong>重要：</strong>本拡張機能は、個人を特定できる情報（氏名、メールアドレス、電話番号など）や、ウェブサイトの閲覧履歴、入力内容などの個人情報を収集することはありません。
+        </div>
+        
+        <h2>3. 情報の保存場所</h2>
+        <p>
+            収集した設定情報は、お使いのブラウザのローカルストレージ（<code>chrome.storage.local</code>）に保存されます。
+            この情報は、お使いのデバイス内にのみ保存され、外部のサーバーに送信されることはありません。
+        </p>
+        
+        <h2>4. 情報の使用目的</h2>
+        <p>収集した設定情報は、以下の目的でのみ使用されます：</p>
+        <ul>
+            <li>各ウェブサイトでのオーバーレイ表示の有効/無効状態を記憶するため</li>
+            <li>ユーザーが選択した表示モードを記憶するため</li>
+            <li>次回同じウェブサイトを訪問した際に、前回の設定を自動的に適用するため</li>
+        </ul>
+        
+        <h2>5. 情報の共有と開示</h2>
+        <p>
+            本拡張機能は、収集した設定情報を第三者と共有することはありません。
+            また、外部のサーバーに送信することもありません。
+            すべての情報は、お使いのデバイス内にのみ保存されます。
+        </p>
+        
+        <h2>6. データの削除</h2>
+        <p>
+            保存された設定情報を削除するには、以下の方法があります：
+        </p>
+        <ul>
+            <li><strong>拡張機能のアンインストール</strong>：本拡張機能をアンインストールすると、すべての設定情報が削除されます</li>
+            <li><strong>ブラウザの設定から削除</strong>：Chromeの設定から拡張機能のデータを削除することができます</li>
+        </ul>
+        
+        <h2>7. 必要な権限について</h2>
+        <p>本拡張機能は、以下の権限を使用します：</p>
+        <ul>
+            <li><strong>activeTab</strong>：現在アクティブなタブのウェブページにアクセスし、要素のクラス名を表示するため</li>
+            <li><strong>storage</strong>：サイトごとの設定をローカルストレージに保存するため</li>
+        </ul>
+        <p>
+            これらの権限は、本拡張機能の機能を提供するために必要最小限のものです。
+            他の目的で使用することはありません。
+        </p>
+        
+        <h2>8. 第三者サービス</h2>
+        <p>
+            本拡張機能は、外部の分析サービスや広告サービスなどの第三者サービスを使用していません。
+            すべての処理は、お使いのブラウザ内で完結します。
+        </p>
+        
+        <h2>9. プライバシーポリシーの変更</h2>
+        <p>
+            本プライバシーポリシーは、予告なく変更される場合があります。
+            重要な変更がある場合は、本ページでお知らせします。
+            定期的にご確認いただくことをお勧めします。
+        </p>
+        
+        <h2>10. お問い合わせ</h2>
+        <div class="contact">
+            <p>
+                本プライバシーポリシーに関するご質問やご意見がございましたら、
+                GitHubリポジトリのIssuesページよりお問い合わせください。
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

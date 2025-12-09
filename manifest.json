@@ -28,5 +28,6 @@
         "16": "icon16.png",
         "48": "icon48.png",
         "128": "icon128.png"
-    }
+    },
+    "privacy_policy": "https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/privacy-policy.html"
 }
